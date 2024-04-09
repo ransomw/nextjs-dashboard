@@ -1,4 +1,4 @@
-const { db } = require('@vercel/postgres');
+const { db, createClient } = require('@vercel/postgres');
 const {
   invoices,
   customers,
@@ -6,6 +6,7 @@ const {
   users,
 } = require('../app/lib/placeholder-data.js');
 const bcrypt = require('bcrypt');
+const ws = require('ws');
 
 async function seedUsers(client) {
   try {
@@ -163,12 +164,28 @@ async function seedRevenue(client) {
 async function main() {
   const client = await db.connect();
 
-  await seedUsers(client);
-  await seedCustomers(client);
-  await seedInvoices(client);
-  await seedRevenue(client);
+  // const client = createClient();
+  /*
+  client.neonConfig.webSocketConstructor = ws;
 
-  await client.end();
+
+  client.neonConfig.wsProxy = (host) => `${host}:5433/v1`;
+  client.neonConfig.useSecureWebSocket = false
+  // client.neonConfig.forceDisablePgSSL = true
+  client.neonConfig.pipelineTLS = false
+  client.neonConfig.pipelineConnect = false
+
+  await client.connect();
+*/
+  try {
+    await seedUsers(client);
+    await seedCustomers(client);
+    await seedInvoices(client);
+    await seedRevenue(client);
+  } finally {
+    await client.end();
+  }
+  // await client.end();
 }
 
 main().catch((err) => {
